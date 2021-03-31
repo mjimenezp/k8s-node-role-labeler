@@ -1,0 +1,12 @@
+FROM golang:1.16.2-buster AS builder
+RUN go version && apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get -qq -y install upx-ucl
+
+ARG component
+
+ADD . /gobuild
+WORKDIR /gobuild
+RUN make clean-all verify-deps static
+RUN apt-get -yq purge upx-ucl
+RUN mv /gobuild/${component} /
+WORKDIR /
+RUN rm -rf /gobuild
