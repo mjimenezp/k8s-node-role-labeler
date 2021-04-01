@@ -2,6 +2,7 @@ package reconcilers
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -10,15 +11,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/safanaj/k8s-node-role-labeler/pkg/awsutils"
+	"github.com/safanaj/k8s-node-role-labeler/pkg/options"
 )
 
 var LabelPrefix string = "node-role.kubernetes.io/"
+
+var LabelSourceUndefinedErr error = errors.New("LabelSourceUndefinedErr")
 
 type nodeRoleLabelReconciler struct {
 	// reconciler is able to retrieve objects from the APIServer.
 	client.Client
 	logr.Logger
 
+	opts  *options.Options
 	cache *awsutils.Cache
 }
 
@@ -32,8 +37,8 @@ func (r *nodeRoleLabelReconciler) InjectLogger(l logr.Logger) error {
 	return nil
 }
 
-func NewNodeRoleLabelReconciler(cache *awsutils.Cache) reconcile.Reconciler {
-	return &nodeRoleLabelReconciler{cache: cache}
+func NewNodeRoleLabelReconciler(cache *awsutils.Cache, opts *options.Options) reconcile.Reconciler {
+	return &nodeRoleLabelReconciler{cache: cache, opts: opts}
 }
 
 func (r *nodeRoleLabelReconciler) Reconcile(ctx context.Context, o reconcile.Request) (reconcile.Result, error) {
@@ -43,16 +48,37 @@ func (r *nodeRoleLabelReconciler) Reconcile(ctx context.Context, o reconcile.Req
 		return reconcile.Result{}, err
 	}
 
-	// 0. useless check for label
-	// 1. get the instance id (and check if in cache)
-	parts := strings.Split(no.Spec.ProviderID, "/")
-	id := parts[len(parts)-1]
-	// 2. get the aws instance details (better from a cache)
-	roleSuffix, err := r.cache.Get(id)
-	if err != nil {
-		return reconcile.Result{}, err
+	var labelKey string
+	if r.opts.UseAwsLifecycle {
+		// 0. useless check for label
+		// 1. get the instance id (and check if in cache)
+		parts := strings.Split(no.Spec.ProviderID, "/")
+		id := parts[len(parts)-1]
+		// 2. get the aws instance details (better from a cache)
+		roleSuffix, err := r.cache.Get(id)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		labelKey = LabelPrefix + roleSuffix
+
+		no.ObjectMeta.Labels[labelKey] = ""
 	}
-	no.ObjectMeta.Labels[LabelPrefix+roleSuffix] = ""
+
+	if r.opts.FromLabel != "" {
+		if v, ok := no.ObjectMeta.Labels[r.opts.FromLabel]; !ok {
+			return reconcile.Result{}, LabelSourceUndefinedErr
+		} else {
+			labelKey = LabelPrefix +
+				r.opts.FromLabelPrefix + v +
+				r.opts.FromLabelSuffix
+			no.ObjectMeta.Labels[labelKey] = ""
+		}
+	}
+
+	if labelKey == "" {
+		return reconcile.Result{}, LabelSourceUndefinedErr
+	}
+
 	if err := r.Update(ctx, no); err != nil {
 		return reconcile.Result{}, err
 	}

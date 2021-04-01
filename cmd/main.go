@@ -46,9 +46,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	awsCache := awsutils.NewCache(ctx, flags.tagKey)
-	inject.LoggerInto(awsCache, log.WithName("awsCache"))
-	awsCache.Start()
+	var awsCache *awsutils.Cache
+	if flags.opts.UseAwsLifecycle {
+		awsCache = awsutils.NewCache(ctx, flags.opts.TagKey)
+		inject.LoggerInto(awsCache, log.WithName("awsCache"))
+		awsCache.Start()
+	}
 
 	err = builder.
 		ControllerManagedBy(mgr).
@@ -80,7 +83,7 @@ func main() {
 				return false
 			},
 		}).
-		Complete(reconcilers.NewNodeRoleLabelReconciler(awsCache))
+		Complete(reconcilers.NewNodeRoleLabelReconciler(awsCache, flags.opts))
 
 	if err := mgr.Start(ctx); err != nil {
 		log.Error(err, "unable to run manager")
