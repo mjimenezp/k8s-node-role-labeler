@@ -6,8 +6,8 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/safanaj/k8s-node-role-labeler/pkg/options"
-	"github.com/safanaj/k8s-node-role-labeler/pkg/reconcilers"
+	"github.com/mjimenezp/k8s-node-role-labeler/pkg/options"
+	"github.com/mjimenezp/k8s-node-role-labeler/pkg/reconcilers"
 )
 
 type Flags struct {

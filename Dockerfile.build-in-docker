@@ -10,3 +10,6 @@ RUN apt-get -yq purge upx-ucl
 RUN mv /gobuild/${component} /
 WORKDIR /
 RUN rm -rf /gobuild
+FROM gcr.io/distroless/static
+COPY --from=builder /node-role-labeler /
+ENTRYPOINT ["/node-role-labeler"]

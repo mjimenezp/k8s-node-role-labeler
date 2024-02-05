@@ -20,8 +20,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 
-	"github.com/safanaj/k8s-node-role-labeler/pkg/awsutils"
-	"github.com/safanaj/k8s-node-role-labeler/pkg/reconcilers"
+	"github.com/mjimenezp/k8s-node-role-labeler/pkg/awsutils"
+	"github.com/mjimenezp/k8s-node-role-labeler/pkg/reconcilers"
 )
 
 var version, progname string
@@ -49,7 +49,7 @@ func main() {
 	var awsCache *awsutils.Cache
 	if flags.opts.UseAwsLifecycle {
 		awsCache = awsutils.NewCache(ctx, flags.opts.TagKey)
-		inject.LoggerInto(awsCache, log.WithName("awsCache"))
+		inject.LoggerInto(awsCache.Logger, log.WithName("awsCache"))
 		awsCache.Start()
 	}
 

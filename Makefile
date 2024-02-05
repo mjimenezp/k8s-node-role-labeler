@@ -1,4 +1,4 @@
-VERSION ?= 0.0.2
+VERSION ?= 0.0.3
 REGISTRY ?= registry2.swarm.devfactory.com/central
 FLAGS =
 ENVVAR = CGO_ENABLED=0
@@ -16,10 +16,10 @@ golang:
 	@$(GO) version
 
 deps:
-	$(GO) mod tidy -v && $(GO) mod vendor -v
+	$(GO) mod tidy -v
 
 verify-deps:
-	$(GO) mod verify && $(GO) mod tidy -v && $(GO) mod vendor -v
+	$(GO) mod verify && $(GO) mod tidy -v
 
 clean:
 	rm -f ${COMPONENT}
@@ -29,7 +29,7 @@ clean-all: clean
 
 build: golang
 	@echo "--> Compiling the project"
-	$(ENVVAR) GOOS=$(GOOS) $(GO) build -mod=vendor \
+	$(ENVVAR) GOOS=$(GOOS) $(GO) build \
 		-gcflags "-e" \
 		-ldflags "$(LDFLAGS) -X main.version=${VERSION} -X main.progname=${COMPONENT}" \
 		-v -o ${COMPONENT} ./cmd/...
@@ -37,7 +37,7 @@ build: golang
 
 static: golang
 	@echo "--> Compiling the static binary"
-	$(ENVVAR) GOARCH=amd64 GOOS=$(GOOS) $(GO) build -mod=vendor -a -tags netgo \
+	$(ENVVAR) GOARCH=amd64 GOOS=$(GOOS) $(GO) build -a -tags netgo \
 		-gcflags "-e" \
 		-ldflags "$(LDFLAGS) -X main.version=${VERSION} -X main.progname=${COMPONENT}" \
 		-v -o ${COMPONENT} ./cmd/...
@@ -61,4 +61,5 @@ docker-build-in-docker:
 		>> Dockerfile.build-in-docker
 	docker build \
 			--build-arg=component=${COMPONENT} \
+			--progress plain \
 			-t ${DOCKER_IMAGE} -f Dockerfile.build-in-docker .

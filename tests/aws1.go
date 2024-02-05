@@ -8,7 +8,7 @@ import (
 	// goflag "flag"
 	flag "github.com/spf13/pflag"
 
-	"github.com/safanaj/k8s-node-role-labeler/pkg/awsutils"
+	"github.com/mjimenezp/k8s-node-role-labeler/pkg/awsutils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"

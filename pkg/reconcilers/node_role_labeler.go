@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/safanaj/k8s-node-role-labeler/pkg/awsutils"
-	"github.com/safanaj/k8s-node-role-labeler/pkg/options"
+	"github.com/mjimenezp/k8s-node-role-labeler/pkg/awsutils"
+	"github.com/mjimenezp/k8s-node-role-labeler/pkg/options"
 )
 
 var LabelPrefix string = "node-role.kubernetes.io/"
